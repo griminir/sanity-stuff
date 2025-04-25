@@ -1,16 +1,24 @@
 import {defineField, defineType} from 'sanity'
+import {CalendarIcon} from '@sanity/icons'
 
 export const eventType = defineType({
   name: 'event',
   title: 'Event',
   type: 'document',
+  icon: CalendarIcon,
+  groups: [
+    {name: 'details', title: 'Details'},
+    {name: 'editorial', title: 'Editorial'}
+  ],
   fields:[
     defineField({
       name: 'name',
-      type: 'string'
+      group: ['details', 'editorial'],
+      type: 'string',
     }),
     defineField({
       name: 'slug',
+      group: 'details',
       type: 'slug',
       options: {
         source: 'name'
@@ -20,6 +28,7 @@ export const eventType = defineType({
     }),
     defineField({
       name: 'eventType',
+      group: 'details',
       type: 'string',
       options: {
         list: ['in-person', 'virtual'],
@@ -35,16 +44,19 @@ export const eventType = defineType({
     }),
     defineField({
       name: 'date',
+      group: 'details',
       type: 'datetime'
     }),
     defineField({
       name: 'doorsOpen',
+      group: 'details',
       description: 'numbers of minutes before the event',
       type: 'number',
       initialValue: 60
     }),
     defineField({
       name: 'venue',
+      group: 'details',
       type: 'reference',
       to: [{type: 'venue'}],
       validation: (rule) => rule.custom((value, context)  => {
@@ -58,21 +70,50 @@ export const eventType = defineType({
     }),
     defineField({
       name: 'headline',
+      group: 'details',
       type: 'reference',
       to: [{type: 'artist'}]
     }),
     defineField({
       name: 'image',
+      group: 'editorial',
       type: 'image'
     }),
     defineField({
       name: 'details',
+      group: 'editorial',
       type: 'array',
       of: [{type: 'block'}]
     }),
     defineField({
       name: 'ticket',
+      group: 'details',
       type: 'url'
     }),
-  ]
+  ],
+  preview: {
+    select: {
+      name: 'name',
+      venue: 'venue.name',
+      artist: 'artist.name',
+      date: 'date',
+      image: 'image'
+    },
+    prepare({name, venue, artist, date, image}){
+      const nameFormatted = name || 'Untitled event'
+      const dateFormatted = date ? new Date(date).toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+      }) : 'No Date'
+
+      return {
+        title: artist ? `${nameFormatted} (${artist})`: nameFormatted,
+        subtitle: venue ? `${dateFormatted} at ${venue}` : dateFormatted,
+        media: image || CalendarIcon
+      }
+    }
+  }
 })
